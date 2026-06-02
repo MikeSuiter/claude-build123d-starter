@@ -30,7 +30,7 @@ Or with winget: `winget install --id=astral-sh.uv -e`
 ## Quick Start
 
 ```bash
-git clone https://github.com/your-username/claude-build123d-starter my-cad-models
+git clone https://github.com/MikeSuiter/claude-build123d-starter my-cad-models
 cd my-cad-models
 uv sync
 ```
