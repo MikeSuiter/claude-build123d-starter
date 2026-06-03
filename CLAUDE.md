@@ -157,24 +157,38 @@ then call `check_build_volume(part)` before exporting to verify fit.
 
 ## Export Strategy
 
-- **Single-color**: `export_all(part, "name")` → STL + STEP + preview
-- **Multi-color**: `export_multicolor([bodies...], "name")` → individual STLs per body + STEP
-- STEP is the archival/interchange format — always include it.
-- STL for slicers and CAM software.
+- **Single-color 3D print**: `export_all(part, "name")` → STL + STEP + preview
+- **Multi-color 3D print**: `export_multicolor([bodies...], "name")` → individual STLs per body + STEP
+- **CNC / laser (2D)**: `export_dxf_panel(sketch, "name")` → closed LWPOLYLINE DXF per panel
+- STEP is the archival/interchange format — always include it alongside DXF for CNC.
 - Assign `.color` and `.label` to each body before calling `export_multicolor()`
 
 ```python
-# Single-color
+# Single-color 3D print
 from lib.helpers import export_all
 export_all(part, "project-name", output_dir=EXPORT_DIR)
 
-# Multi-color
+# Multi-color 3D print
 from build123d import Color
 from lib.helpers import export_multicolor
 body_a.color = Color("black"); body_a.label = "base"
 body_b.color = Color("red");   body_b.label = "accent"
 export_multicolor([body_a, body_b], "project-name", output_dir=EXPORT_DIR)
+
+# CNC / laser — 2D profile as DXF (one file per unique panel shape)
+from lib.helpers import export_dxf_panel
+with BuildSketch(Plane.XY) as panel_sk:
+    Rectangle(width, height)
+    # ... subtract notches, pockets, etc.
+export_dxf_panel(panel_sk.sketch, "panel-name", output_dir=str(EXPORT_DIR))
+# Also export STEP for reference
+export_step(Compound(children=[...]), str(EXPORT_DIR / "assembly.step"))
 ```
+
+### CNC section header
+
+Replace `# === Print Settings ===` with `# === CNC Settings ===` and note:
+stock thickness, tool diameter, kerf/fit tolerance, and cut quantity per DXF.
 
 ---
 
@@ -212,6 +226,34 @@ Key points:
 tool_radius = 3.175  # 1/8" bit
 # Add relief circles at each inside corner offset by tool_radius
 ```
+
+#### Finger joint math — parametric, self-adjusting
+
+```python
+STOCK_T = 19.05   # 3/4" stock
+PANEL_H = 101.6   # panel height
+
+# N_F must be odd: guarantees a finger (not a slot) at both top and bottom of each end.
+_n_raw = PANEL_H / (2 * STOCK_T)
+N_F    = max(1, round(_n_raw))
+if N_F % 2 == 0:
+    N_F += 1
+F = PANEL_H / (2 * N_F - 1)   # exact finger/slot height — fills panel height perfectly
+
+# Panel A (e.g. front/back): N_F fingers, N_F-1 slots per short end
+# Slot Z-centers (between fingers):
+fb_slots = [-PANEL_H/2 + (2*i + 1.5) * F for i in range(N_F - 1)]
+
+# Panel B (e.g. left/right): complementary — N_F-1 fingers, N_F slots per short end
+# Slot Z-centers (at top, bottom, and between):
+lr_slots = [-PANEL_H/2 + (2*i + 0.5) * F for i in range(N_F)]
+
+# Slot cutter: add +0.1 to all dimensions to avoid coplanar Boolean artifacts
+cutter = Box(STOCK_T + 0.1, STOCK_T + 0.1, F)
+```
+
+The two slot lists are complementary: where A has solid (finger), B has void (slot), and vice versa.
+Verify by checking that `fb_slots` and `lr_slots` z-ranges never overlap.
 
 ---
 

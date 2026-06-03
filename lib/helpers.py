@@ -204,6 +204,63 @@ def export_multicolor(
     print(f"✓ Exported {name}.step (archival) to {output_dir}/")
 
 
+def export_dxf_panel(
+    face_or_sketch,
+    name: str,
+    output_dir: str = "exports",
+) -> None:
+    """Export a 2D face/sketch as DXF with closed LWPOLYLINE entities.
+
+    ExportDXF emits one LINE per edge, which CAM tools like Vectric treat as
+    disconnected geometry. This helper uses ezdxf directly to write each wire
+    as a single closed LWPOLYLINE, which CAM software can use immediately.
+    Supports profiles with inner wires (holes/pockets) as separate polylines.
+    """
+    import ezdxf
+
+    d = _ensure_dir(output_dir)
+    doc = ezdxf.new("AC1027")      # DXF 2013
+    doc.header["$INSUNITS"] = 4    # 4 = millimeters
+    msp = doc.modelspace()
+
+    try:
+        faces = face_or_sketch.faces()
+    except AttributeError:
+        faces = [face_or_sketch]
+
+    for face in faces:
+        _add_wire_as_lwpoly(msp, face.outer_wire())
+        for inner in face.inner_wires():
+            _add_wire_as_lwpoly(msp, inner)
+
+    doc.saveas(str(d / f"{name}.dxf"))
+    print(f"  DXF → {d / f'{name}.dxf'}")
+
+
+def _add_wire_as_lwpoly(msp, wire) -> None:
+    """Trace a closed Wire's edges and add as a single closed LWPOLYLINE."""
+    # Build an ordered point list by sorting edges into a connected chain.
+    raw_edges = list(wire.edges())
+    if not raw_edges:
+        return
+
+    ordered = [raw_edges.pop(0)]
+    while raw_edges:
+        tail = ordered[-1].end_point()
+        for i, e in enumerate(raw_edges):
+            if (tail - e.start_point()).length < 1e-4:
+                ordered.append(raw_edges.pop(i))
+                break
+            if (tail - e.end_point()).length < 1e-4:
+                ordered.append(raw_edges.pop(i).reverse())
+                break
+        else:
+            break  # gap in wire — shouldn't happen for a closed BuildSketch face
+
+    pts = [(e.start_point().X, e.start_point().Y) for e in ordered]
+    msp.add_lwpolyline(pts, close=True)
+
+
 # === SVG Import Helpers ===
 
 

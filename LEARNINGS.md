@@ -6,6 +6,64 @@ found — good or bad.
 
 ---
 
+## CNC / DXF Workflow
+
+### DXF export must use LWPOLYLINE, not ExportDXF
+
+`ExportDXF.add_shape(face)` emits one `LINE` entity per edge. CAM tools like Vectric
+import these as disconnected geometry ("bunch of lines"), not a closed vector.
+
+**Fix:** use `ezdxf` directly and write each wire as a single closed `LWPOLYLINE`:
+
+```python
+import ezdxf
+
+doc = ezdxf.new("AC1027")
+doc.header["$INSUNITS"] = 4   # 4 = mm
+msp = doc.modelspace()
+# ordered_pts = list of (x, y) tuples traced from wire.edges()
+msp.add_lwpolyline(ordered_pts, close=True)
+doc.saveas(path)
+```
+
+Use `export_dxf_panel(sketch, name, output_dir)` from `lib/helpers.py` — it handles
+edge ordering and inner wires automatically.
+
+### Tracing a closed Wire into an ordered point list
+
+`wire.edges()` can return edges in any order. Sort them into a connected chain before
+building the LWPOLYLINE:
+
+```python
+raw = list(wire.edges())
+ordered = [raw.pop(0)]
+while raw:
+    tail = ordered[-1].end_point()
+    for i, e in enumerate(raw):
+        if (tail - e.start_point()).length < 1e-4:
+            ordered.append(raw.pop(i)); break
+        if (tail - e.end_point()).length < 1e-4:
+            ordered.append(raw.pop(i).reverse()); break
+pts = [(e.start_point().X, e.start_point().Y) for e in ordered]
+```
+
+`Vector` has no `.distance_to()` — use `(v1 - v2).length` instead.
+
+### Boolean cutter oversize — avoid coplanar artifacts
+
+When subtracting a slot cutter that shares a face with the target solid (e.g. a notch
+that goes to the exact edge), add a small oversize (0.1 mm) to the cutter on all sides
+that touch the solid boundary:
+
+```python
+cutter = Box(depth + 0.1, thickness + 0.1, slot_height)  # not exact depth/thickness
+```
+
+Without this, OpenCascade may leave a phantom coplanar face that shows up as a visual
+seam or causes export artifacts.
+
+---
+
 ## build123d API
 
 ### Involute Gear Profile — working pattern
