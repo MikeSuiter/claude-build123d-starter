@@ -16,13 +16,11 @@ Brief description of what this model is and what it's for.
 uv run python projects/<project-name>/model.py
 ```
 
-## Print Settings
+## Fabrication
 
 | Setting | Value |
 |---|---|
-| Printer | [Printer model] |
-| Material | PLA |
-| Nozzle | 0.4 mm |
-| Layer height | 0.20 mm |
-| Orientation | Bottom face on bed |
-| Supports | None |
+| Method | [3D Print / CNC / Laser / Reference only] |
+| Material | [PLA / Wood / Aluminum / Acrylic / etc.] |
+| Machine | [Printer model / Router / Laser cutter] |
+| Notes | [Layer height, tool diameter, kerf, etc.] |

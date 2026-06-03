@@ -76,7 +76,7 @@ def inches_to_mm(inches: float) -> float:
 
 # === Build Volume Check ===
 
-# Set this to your printer's build volume (X, Y, Z in mm).
+# Set this to your machine's work envelope (X, Y, Z in mm) — printer bed, CNC travel, or laser bed.
 # Examples: Bambu Lab P2S = (256, 256, 256), Ender 3 = (235, 235, 250), Prusa MK4 = (250, 210, 220)
 BUILD_VOLUME: tuple[float, float, float] | None = None
 
@@ -85,9 +85,9 @@ def check_build_volume(
     part: Solid | Compound,
     volume: tuple[float, float, float] | None = None,
 ) -> bool:
-    """Check if a part fits within the printer build volume.
+    """Check if a part fits within the machine work envelope (printer bed, CNC travel, or laser bed).
 
-    Set BUILD_VOLUME above for your printer, or pass volume=(X, Y, Z) directly.
+    Set BUILD_VOLUME above for your machine, or pass volume=(X, Y, Z) directly.
     Prints a reminder and returns True if no volume is configured.
     """
     v = volume or BUILD_VOLUME

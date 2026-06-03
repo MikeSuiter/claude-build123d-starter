@@ -2,9 +2,10 @@
 
 A ready-to-use project template for creating parametric 3D CAD models with
 [build123d](https://build123d.readthedocs.io/) and [Claude Code](https://claude.ai/code).
+Supports 3D printing (FDM/SLA), CNC milling/routing, laser cutting, and reference geometry.
 
 Describe what you want to model in plain English — Claude writes the Python code,
-shows a live 3D preview, and exports print-ready files. No CAD experience required.
+shows a live 3D preview, and exports files ready for your fabrication workflow. No CAD experience required.
 
 ## How It Works
 
@@ -45,9 +46,9 @@ Follow the install instructions at [claude.ai/code](https://claude.ai/code). Whe
 claude --version
 ```
 
-### 4. A 3D printer (optional)
+### 4. Fabrication hardware (optional)
 
-Any FDM or SLA printer. You can view and export models without printing.
+Any 3D printer (FDM/SLA), CNC router/mill, or laser cutter. You can view, model, and export without any hardware at all.
 
 ---
 
@@ -73,18 +74,20 @@ Or open VS Code manually and use **File → Open Folder**, then select the `my-c
 
 After it opens, click the **OCP CAD Viewer** icon in the left sidebar to open the 3D preview panel. You'll see it there once a model runs.
 
-### 3. Configure your printer (optional)
+### 3. Configure your machine work envelope (optional)
 
-Edit `lib/helpers.py` and set `BUILD_VOLUME` to your printer's dimensions. Claude will use this to validate models fit before exporting.
+Edit `lib/helpers.py` and set `BUILD_VOLUME` to your machine's work area (printer bed, CNC travel envelope, or laser bed). Claude will use this to validate models fit before exporting.
 
 ```python
 # Examples:
 BUILD_VOLUME = (256, 256, 256)  # Bambu Lab P2S
 BUILD_VOLUME = (235, 235, 250)  # Ender 3
 BUILD_VOLUME = (250, 210, 220)  # Prusa MK4
+BUILD_VOLUME = (600, 900, 80)   # Typical hobby CNC router
+BUILD_VOLUME = (400, 300, 0)    # Typical desktop laser cutter (Z unused)
 ```
 
-Skip this step if you don't have a printer yet.
+Skip this step if you haven't settled on a machine yet.
 
 ### 4. Verify everything works
 
@@ -117,6 +120,10 @@ Claude automatically reads `CLAUDE.md` on startup — it knows the project conve
 Or just describe what you want directly:
 
 > "Make a wall-mount phone holder, about 4 inches wide, printed in black PETG"
+
+> "Design a finger-jointed box lid for CNC routing, 200 × 150mm, in 18mm plywood"
+
+> "Laser-cut a living-hinge card holder in 3mm acrylic, 90 × 60mm"
 
 Claude follows an incremental workflow: base geometry first, features one at a time, colors last. You'll see the model update in the OCP CAD Viewer as each step completes.
 
