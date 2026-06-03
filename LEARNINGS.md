@@ -8,6 +8,85 @@ found — good or bad.
 
 ## build123d API
 
+### Involute Gear Profile — working pattern
+
+Use `Edge.make_spline` + `Edge.make_three_point_arc` for a clean, smooth gear in algebra mode:
+
+```python
+# One tooth (centered at angle 0), then rotate for each tooth
+right_spline = Edge.make_spline([Vector(x, y, 0) for x, y in right_flank])
+left_spline  = Edge.make_spline([Vector(x, y, 0) for x, y in left_flank])
+
+# Tip arc: 3-point arc through right-tip, tooth-center@tip_r, left-tip
+tip_arc = Edge.make_three_point_arc(r_tip, Vector(tip_r*cos(tr), tip_r*sin(tr), 0), l_tip)
+
+# Root arc at base_r between teeth
+root_arc = Edge.make_three_point_arc(l_root, root_mid, r_root_next)
+
+gear_wire = Wire(all_edges)   # build123d auto-sorts connected edges
+gear_face = make_face(gear_wire)
+gear = extrude(gear_face, THICKNESS)
+```
+
+Key gotchas:
+- **CW involute is required for correct teeth**: the standard involute formula
+  `x=rb*(cos(t)+t*sin(t)), y=rb*(sin(t)-t*cos(t))` produces a CCW curve where the tooth
+  WIDENS toward the tip. Correct gear teeth NARROW toward the tip (wider at root).
+  Fix: negate y → `(x, -y)`. Also update the centering offset from MINUS to PLUS:
+  `offset = π/(2N) + atan2(ip_y, ip_x)`.  The extrude direction stays positive (+THICKNESS).
+- **Tip arc direction**: arc from right-flank-tip to left-flank-tip goes CLOCKWISE
+  (decreasing angle). If you compute the mid-angle, ensure `al < ar` (NOT `al < ar → al += 2π`).
+  The correct guard is `if al > ar: al -= 2π`. Getting this wrong sends the tip arc midpoint
+  to the OPPOSITE side of the gear, creating inverted spikes.
+- **Root arc at base_r, not root_r**: `root_r < base_r` for standard gears. Keeping the
+  root arc at `base_r` avoids a thin extruded sliver where the step-down/step-up creates
+  1mm-wide × 10mm-tall faces that render as fins.
+- **Per-tooth approach is required**: building a single closed Wire for the whole gear and calling
+  `make_face` produces 24 separate floating tooth faces, NOT a solid disk. The wire's CCW outer
+  boundary + CW per-tooth excursions (tip arcs) make OCC interpret each tooth as a separate enclosed
+  region. **Correct approach**: build ONE tooth wire (right spline + tip arc + left spline + closing
+  arc at base_r), extrude it, then `Rot(0, 0, angle_deg) * tooth` × N_TEETH, and union onto a
+  base `Cylinder(base_r, ...)`. The closing arc must pass through `(base_r, 0)` to form a clean
+  closed tooth outline.
+- **Volumes check**: `hub + rim == gear` (within floating point). Good smoke test after boolean split.
+- **Mating gear display — base disk must be root_r, not base_r**: if you use `Cylinder(base_r)` for
+  the gear body and `Cylinder(base_r)` for the mating gear, the tooth tips of each gear will
+  penetrate the other's base disk (tip extends ~2mm past pitch point; base_r is ~1mm outside pitch).
+  Fix: use `root_r = pitch_r - 1.25*module` for the base disk, and extend each tooth solid to root_r
+  with a root arc. Verify no overlap: `(gear & mating_gear_placed).volume ≈ 0`.
+
+### Single-color solid in ocp_vscode — use BuildSketch, not iterative union
+
+`shape.color = Color(...)` on an algebra-mode Compound **does not cascade** to
+sub-solids. ocp_vscode renders each sub-solid with its own default (white/grey)
+color. This shows up as a visible seam ring at the cylinder/tooth-base boundary
+even after Builder-mode `add()` fusing.
+
+**Root cause**: OCC's `BRepAlgoAPI_Fuse` keeps the edge where two coplanar faces
+meet (e.g., the top disk face of the base cylinder and the tooth root faces). This
+boundary is always visible in ocp_vscode regardless of fuse method.
+
+**Fix**: build the profile as a single 2D sketch, then extrude once. BuildSketch's
+2D boolean union merges all adjacent faces before extrusion, so the result has no
+internal coplanar face boundaries:
+
+```python
+with BuildPart() as bp:
+    with BuildSketch(Plane.XY):
+        Circle(root_r)
+        for k in range(n_teeth):
+            add(Rot(0, 0, math.degrees(k * tooth_step)) * tooth_face)
+        Circle(bore_r, mode=Mode.SUBTRACT)
+    extrude(amount=THICKNESS)
+gear = bp.part
+gear.color = color   # works correctly on a Part (not a Compound)
+```
+
+`tooth_face = make_face(tooth_wire)` — use the same tooth wire, just stop before
+the 3D extrusion step and add the 2D face to BuildSketch instead.
+
+---
+
 ### `scale()` uses `by=`, not `factor=`
 ```python
 # WRONG — throws TypeError
