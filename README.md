@@ -144,10 +144,14 @@ Claude follows an incremental workflow: base geometry first, features one at a t
 └── projects/
     ├── _template/                # Starting point for new projects
     │   └── model.py
-    ├── color-coasters/           # Example: 4-color US flag coaster (FDM)
+    ├── color-coasters/           # Example: 4-color US flag coaster (FDM → STL)
     │   ├── model.py
     │   ├── README.md
     │   └── exports/
+    ├── cnc-coasters/             # Example: US flag coaster vector outlines (CNC/laser → DXF)
+    │   ├── model.py
+    │   ├── README.md
+    │   └── exports/              # cnc-coasters.dxf (3 layers: PERIMETER, STAR, TEXT)
     ├── gear-pair/                # Example: meshing involute spur gear pair (FDM/reference)
     │   ├── model.py
     │   ├── README.md

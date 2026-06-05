@@ -9,7 +9,7 @@ color registration and layer transition quality.
 
 Paste this into Claude Code to build this model from scratch:
 
-> Make me a round drink coaster to print on my multi-material 3D printer. 3.5 inches across, about 4mm thick, with a 1mm chamfer on the top outer edge. Patriotic theme — white 5-pointed star in the center, top half of the outer ring in blue, bottom half in red, with the text "IT'S 5PM SOMEWHERE" going around the edge. White base. Export as separate STL files so I can assign each color a different extruder in my slicer.
+> Make me a round drink coaster to print on my multi-material 3D printer. 3.5 inches across, about 4mm thick, with a 1mm chamfer on the top outer edge. Patriotic theme — white 5-pointed star in the center, top half of the outer ring in blue, bottom half in red, with the text "IT'S 5PM SOMEWHERE" in Oswald Bold going around the edge. White base. Export as separate STL files so I can assign each color a different extruder in my slicer.
 
 ## Dimensions
 
