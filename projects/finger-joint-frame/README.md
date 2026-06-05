@@ -3,6 +3,12 @@
 Open 4-panel frame (no bottom, no lid) with box/finger joints at all four corners.
 Cut from 3/4" hardwood on a CNC router. Each panel pair shares a DXF file.
 
+## Try This Prompt
+
+Paste this into Claude Code to build this model from scratch:
+
+> I want to cut an open box frame on my CNC router from 3/4 inch hardwood. Outside dimensions: 8 inches long, 6 wide, 4 tall. No bottom or lid — just four side panels with finger joints at all four corners. Give me DXF files for the CAM software, one profile for the long panels and one for the short panels, plus a 3D STEP file so I can visualize the assembled frame.
+
 ## Dimensions
 
 | Parameter       | Value       |

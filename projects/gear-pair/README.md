@@ -7,6 +7,12 @@ separately so you can print or use them independently.
 Tooth flanks are smooth B-spline curves through involute sample points — not polygon
 approximations. Change `MODULE` and tooth counts; everything recomputes automatically.
 
+## Try This Prompt
+
+Paste this into Claude Code to build this model from scratch:
+
+> Can you make a pair of meshing spur gears? I want a 2:1 ratio — 24 teeth on the big gear and 12 on the pinion. Module 2, standard 20-degree pressure angle, 10mm thick, with a 5mm center bore on each. Show them meshed at the correct center distance in the viewer, but export each gear separately at the origin so I can print them individually on my FDM printer.
+
 ## Parameters
 
 | Parameter | Default | Description |

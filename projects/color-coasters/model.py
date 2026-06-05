@@ -37,7 +37,7 @@ star_inner_r = 6.0                  # mm — inner valley radius
 star_n_points = 5
 
 # Circular text — flush black inlay, centered at bottom of coaster
-TEXT = "MY COOL COASTER"
+TEXT = "IT'S 5PM SOMEWHERE"
 FONT = str(FONTS_DIR / "Oswald-Bold.ttf")
 text_font_size = 5.5                # mm
 text_margin = 2.0                   # mm from coaster outer edge to char outer edge
