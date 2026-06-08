@@ -156,10 +156,14 @@ Claude follows an incremental workflow: base geometry first, features one at a t
     │   ├── model.py
     │   ├── README.md
     │   └── exports/
-    └── finger-joint-frame/       # Example: 4-panel finger-joint box frame (CNC → DXF)
+    ├── finger-joint-frame/       # Example: 4-panel finger-joint box frame (CNC → DXF)
+    │   ├── model.py
+    │   ├── README.md
+    │   └── exports/              # front_back.dxf, left_right.dxf, assembly.step
+    └── mountain-range/           # Example: smooth 4-peak terrain relief (CNC → STEP)
         ├── model.py
         ├── README.md
-        └── exports/              # front_back.dxf, left_right.dxf, assembly.step
+        └── exports/              # mountain-range.step, mountain-range.stl
 ```
 
 ---
